@@ -94,6 +94,11 @@ class ContestType extends AbstractExternalIdEntityType
             ],
             'help' => 'When enabled, users will not see the final result immediately.',
         ]);
+        $builder->add('penaltyTime', IntegerType::class, [
+            'required' => false,
+            'label' => 'Penalty time',
+            'help' => 'Penalty time in minutes per wrong submission (if eventually solved).',
+        ]);
         $builder->add('allowSubmit', ChoiceType::class, [
             'expanded' => true,
             'label' => 'Allow submit',
@@ -242,6 +247,16 @@ class ContestType extends AbstractExternalIdEntityType
 
             if ($contest && !$contest->getContestProblemset()) {
                 $form->remove('clearContestProblemset');
+            }
+        });
+
+        $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
+            $data = $event->getData();
+
+            // For scoring contests, always set penalty time to 0
+            if (isset($data['scoreboardType']) && $data['scoreboardType'] === ScoreboardType::SCORING->value) {
+                $data['penaltyTime'] = 0;
+                $event->setData($data);
             }
         });
     }

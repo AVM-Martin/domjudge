@@ -89,7 +89,7 @@ class ImportExportService
                 ? $contest->getEndtimeString()
                 : Utils::absTime($contest->getEndtime(), true),
             'duration' => Utils::relTime($contest->getContestTime((float)$contest->getEndtime())),
-            'penalty_time' => $this->config->get('penalty_time'),
+            'penalty_time' => $contest->getPenaltyTime(),
             'activate_time' => Utils::isRelTime($contest->getActivatetimeString())
                 ? $contest->getActivatetimeString()
                 : Utils::absTime($contest->getActivatetime(), true),
@@ -300,6 +300,26 @@ class ImportExportService
             $contest->setDeactivatetimeString($deactivateTimeIsRelative ? $deactivateRelativeTime : date_format($deactivateTime, 'Y-m-d H:i:s e'));
         }
 
+        $scoreboardTypeData = $data['scoreboard_type'] ?? $data['scoreboard-type'] ?? null;
+        if ($scoreboardTypeData !== null) {
+            $scoreboardType = ScoreboardType::tryFrom($scoreboardTypeData);
+            if (!$scoreboardType) {
+                $errorMessage = sprintf('Scoreboard type %s is not valid.', $scoreboardTypeData);
+                return false;
+            }
+
+            $contest->setScoreboardtype($scoreboardType);
+        }
+
+        if ($contest->getScoreboardType() === ScoreboardType::PASS_FAIL) {
+            $penaltyTime = $data['penalty_time'] ?? $data['penalty-time'] ?? $data['penalty'] ?? null;
+            if ($penaltyTime !== null) {
+                $contest->setPenaltytime((int)$penaltyTime);
+            }
+        } else {
+            $contest->setPenaltyTime(0);
+        }
+
         // Get all visible categories. For now, we assume these are the ones getting awards
         $visibleCategories = $this->em->getRepository(TeamCategory::class)->findBy(['visible' => true]);
 
@@ -366,21 +386,6 @@ class ImportExportService
         }
 
         $this->em->flush();
-
-        $penaltyTime = $data['penalty_time'] ?? $data['penalty-time'] ?? $data['penalty'] ?? null;
-        if ($penaltyTime !== null) {
-            $currentPenaltyTime = $this->config->get('penalty_time');
-            if ($penaltyTime != $currentPenaltyTime) {
-                $penaltyTimeConfiguration = $this->em->getRepository(Configuration::class)->findOneBy(['name' => 'penalty_time']);
-                if (!$penaltyTimeConfiguration) {
-                    $penaltyTimeConfiguration = new Configuration();
-                    $penaltyTimeConfiguration->setName('penalty_time');
-                    $this->em->persist($penaltyTimeConfiguration);
-                }
-
-                $penaltyTimeConfiguration->setValue((int)$penaltyTime);
-            }
-        }
 
         if (isset($data['problems'])) {
             $this->importProblemsData($contest, $data['problems']);

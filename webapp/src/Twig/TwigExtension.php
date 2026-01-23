@@ -1150,7 +1150,7 @@ HTML;
 
     public function calculatePenaltyTime(bool $solved, int $num_submissions): int
     {
-        return Utils::calcPenaltyTime($solved, $num_submissions, (int)$this->config->get('penalty_time'),
+        return Utils::calcPenaltyTime($solved, $num_submissions, $penaltyTime,
                                       (bool)$this->config->get('score_in_seconds'));
     }
 

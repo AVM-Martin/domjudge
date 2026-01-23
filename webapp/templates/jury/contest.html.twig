@@ -92,6 +92,11 @@
                     <td></td>
                 </tr>
                 <tr>
+                    <th>Penalty time</th>
+                    <td>{{ contest.penaltyTime }} minutes</td>
+                    <td></td>
+                </tr>
+                <tr>
                     <th>Allow submit</th>
                     <td>
                         {% include 'jury/partials/contest_toggle.html.twig' with {type: 'submit', enabled: contest.allowSubmit} %}

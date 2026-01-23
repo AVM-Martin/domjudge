@@ -135,12 +135,13 @@ class ScoreboardMergeCommand extends Command
         $scoreCache = [];
         /** @var RankCache[] $rankCache */
         $rankCache = [];
-        $penaltyTime = (int)$this->config->get('penalty_time');
+        $penaltyTime = 20; // TODO(AVM-Martin): this is hardcoded
         $scoreIsInSeconds = (bool)$this->config->get('score_in_seconds');
         $timeOfLastCorrect = [];
         $affiliations = [];
         $firstSolve = [];
         $contest = (new Contest())
+            ->setPenaltyTime($penaltyTime)
             ->setName($input->getArgument('contest-name'));
         $freezeData = null;
 
@@ -368,7 +369,6 @@ class ScoreboardMergeCommand extends Command
             array_values($rankCache),
             $freezeData,
             false,
-            (int)$this->config->get('penalty_time'),
             false
         );
 
