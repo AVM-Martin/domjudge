@@ -80,6 +80,13 @@ class Testcase
     private bool $sample = false;
 
     #[ORM\Column(options: [
+        'comment' => 'Preliminary testscases for PRETEST scoring',
+        'default' => 0,
+    ])]
+    #[Serializer\Exclude]
+    private bool $pretest = false;
+
+    #[ORM\Column(options: [
         'comment' => 'Deleted testcases are kept for referential integrity.',
         'default' => 0,
     ])]
@@ -231,6 +238,17 @@ class Testcase
     public function getDeleted(): bool
     {
         return $this->deleted;
+    }
+
+    public function setPretest(bool $pretest): Testcase
+    {
+        $this->pretest = $pretest;
+        return $this;
+    }
+
+    public function isPretest(): bool
+    {
+        return $this->pretest;
     }
 
     public function addJudgingRun(JudgingRun $judgingRun): Testcase
