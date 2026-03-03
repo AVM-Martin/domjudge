@@ -157,7 +157,11 @@
                         {%- if rejudging is defined %}
                             ⇝
                         {% endif %}
-                        {{ submission | printValidJurySubmissionResult }}
+                        {%- if contest.hasPreliminaryJudging %}
+                            {{ submission.getJudgings.first | printPretestResult(jury: true) }}
+                        {%- else %}
+                            {{ submission | printValidJurySubmissionResult }}
+                        {%- endif %}
                     </a>
                 </td>
                 {% if showExternalResult and not showExternalTestcases %}

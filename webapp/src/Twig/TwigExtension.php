@@ -83,6 +83,7 @@ class TwigExtension extends AbstractExtension implements GlobalsInterface
             new TwigFilter('printHumanTimeDiff', $this->printHumanTimeDiff(...)),
             new TwigFilter('printtimeHover', $this->printtimeHover(...), ['is_safe' => ['html']]),
             new TwigFilter('printResult', $this->printResult(...), ['is_safe' => ['html']]),
+            new TwigFilter('printPretestResult', $this->printPretestResult(...), ['is_safe' => ['html']]),
             new TwigFilter('printValidJuryResult', $this->printValidJuryResult(...), ['is_safe' => ['html']]),
             new TwigFilter('printValidJurySubmissionResult', $this->printValidJurySubmissionResult(...),
                            ['is_safe' => ['html']]),
@@ -553,6 +554,12 @@ class TwigExtension extends AbstractExtension implements GlobalsInterface
             case 'correct':
                 $style = 'sol_correct';
                 break;
+            case 'pretest-passed':
+                $style = 'sol_passed';
+                break;
+            case 'ignored':
+                $style = 'sol_queued';
+                break;
             default:
                 $style = 'sol_incorrect';
                 if ($onlyRejectedForIncorrect) {
@@ -561,6 +568,37 @@ class TwigExtension extends AbstractExtension implements GlobalsInterface
         }
 
         return sprintf('<span class="sol %s">%s</span>', $valid ? $style : 'disabled', $result);
+    }
+
+    public function printPretestResult(
+        Judging $judging,
+        bool $valid = true,
+        bool $jury = false,
+        bool $onlyRejectedForIncorrect = false,
+        bool $thawed = false,
+    ): string {
+        if ($jury) {
+            $thawed = true;
+        }
+
+        $judgingResult = $this->printResult($judging->getResult(), $valid, $jury, $onlyRejectedForIncorrect);
+
+        $submission = $judging->getSubmission();
+        if ($submission->getSubmittime() > $submission->getContest()->getEndtime()) {
+            return $this->printResult('too-late', $valid) . ($jury ? ' (' . $judgingResult . ')' : '');
+        }
+
+        if (!$judging->isPretestsPassed()) {
+            return $judgingResult;
+        }
+
+        $passed = $this->printResult('pretest-passed', $valid);
+        if ($judging->isIgnored()) {
+            $result = ($jury ? $judgingResult . ', ' : '') . $this->printResult('ignored', $valid);
+            return $passed . ' (' . $result  . ')';
+        }
+
+        return $passed . ($thawed ? ' (' . $judgingResult . ')' : '');
     }
 
     public function printValidJuryResult(?string $result): string

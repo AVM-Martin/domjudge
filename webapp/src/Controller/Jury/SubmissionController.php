@@ -198,6 +198,7 @@ class SubmissionController extends BaseController
         $results = array_keys($this->config->getVerdicts(['final', 'in_progress']));
 
         $data = [
+            'contest' => $this->dj->getCurrentContest(),
             'refresh' => $refresh,
             'viewTypes' => $viewTypes,
             'view' => $view,

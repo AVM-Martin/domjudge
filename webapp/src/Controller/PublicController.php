@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\DataTransferObject\SubmissionRestriction;
 use App\Entity\Contest;
 use App\Entity\ContestProblem;
+use App\Entity\Judging;
 use App\Entity\Submission;
 use App\Entity\Team;
 use App\Entity\TeamCategory;
@@ -391,6 +392,17 @@ class PublicController extends BaseController
     ): string {
         if ($submission->getSubmittime() >= $contest->getEndtime()) {
             return $this->twigExtension->printResult('too-late');
+        }
+        if ($contest->hasPreliminaryJudging()) {
+            if (!$submission->getJudgings()->first() || !$submission->getJudgings()->first()->getResult()) {
+                return $this->twigExtension->printResult('');
+            }
+
+            return $this->twigExtension->printPretestResult(
+                $submission->getJudgings()->first(),
+                onlyRejectedForIncorrect: true,
+                thawed: $contest->getFreezeData()->showFinal()
+            );
         }
         if ($contest->getFreezetime() && $submission->getSubmittime() >= $contest->getFreezetime() && !$contest->getFreezeData()->showFinal()) {
             return $this->twigExtension->printResult('');

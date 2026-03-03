@@ -140,6 +140,7 @@ class TeamCategoryController extends BaseController
         );
 
         $data = [
+            'contest' => $this->dj->getCurrentContest(),
             'teamCategory' => $teamCategory,
             'submissions' => $submissions,
             'submissionCounts' => $submissionCounts,

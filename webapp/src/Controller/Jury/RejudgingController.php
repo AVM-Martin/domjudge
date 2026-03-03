@@ -391,6 +391,7 @@ class RejudgingController extends BaseController
         }
 
         $data = [
+            'contest' => $this->dj->getCurrentContest(),
             'rejudging' => $rejudging,
             'todo' => $todo,
             'done' => $done,

@@ -62,6 +62,8 @@
                                 {{- '' | printResult -}}
                             {%- elseif verificationRequired and not submission.judgings.first.verified %}
                                 {{- '' | printResult -}}
+                            {%- elseif contest.hasPreliminaryJudging %}
+                                {{- submission.judgings.first | printPretestResult(thawed: contest.getFreezeData.showFinal) -}}
                             {%- else %}
                                 {{- submission.judgings.first.result | printResult -}}
                             {%- endif %}

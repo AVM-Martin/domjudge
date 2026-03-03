@@ -496,6 +496,7 @@ class ProblemController extends BaseController
         );
 
         $data = [
+            'contest' => $this->dj->getCurrentContest(),
             'problem' => $problem,
             'problemAttachmentForm' => $problemAttachmentForm->createView(),
             'submissions' => $submissions,
