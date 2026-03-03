@@ -61,7 +61,7 @@ class ContestType extends AbstractExternalIdEntityType
         $builder->add('freezetimeString', TextType::class, [
             'label' => 'Scoreboard freeze time',
             'required' => false,
-            'help' => 'Time when the freeze starts: the results of submissions made after this time are not revealed until the scoreboard unfreeze time below has passed.',
+            'help' => 'Time when the freeze starts: the results of submissions made after this time are not revealed until the scoreboard unfreeze time below has passed. You may leave this empty for PRELIMINARY JUDGING CONTEST SYSTEM.',
         ]);
         $builder->add('endtimeString', TextType::class, [
             'label' => 'End time',
@@ -84,6 +84,15 @@ class ContestType extends AbstractExternalIdEntityType
                 'scoring' => ScoreboardType::SCORING,
             ],
             'help' => 'The type of scoreboard to use for this contest.',
+        ]);
+        $builder->add('preliminaryJudging', ChoiceType::class, [
+            'expanded' => true,
+            'label' => 'Implements preliminary judging contest system',
+            'choices' => [
+                'Yes' => true,
+                'No' => false,
+            ],
+            'help' => 'When enabled, users will not see the final result immediately.',
         ]);
         $builder->add('allowSubmit', ChoiceType::class, [
             'expanded' => true,

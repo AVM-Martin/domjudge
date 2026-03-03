@@ -273,6 +273,12 @@ class Contest extends BaseApiEntity implements
     private bool $enabled = true;
 
     #[ORM\Column(
+        options: ['comment' => 'Does contest have preliminary test system?', 'default' => 0]
+    )]
+    #[Serializer\Groups([ARC::GROUP_NONSTRICT])]
+    private bool $preliminary_judging = false;
+
+    #[ORM\Column(
         options: ['comment' => 'Are submissions accepted in this contest?', 'default' => 1]
     )]
     #[Serializer\Groups([ARC::GROUP_NONSTRICT])]
@@ -743,6 +749,17 @@ class Contest extends BaseApiEntity implements
         return $this->enabled;
     }
 
+    public function setPreliminaryJudging(bool $preliminary_judging): Contest
+    {
+        $this->preliminary_judging = $preliminary_judging;
+        return $this;
+    }
+
+    public function hasPreliminaryJudging(): bool
+    {
+        return $this->preliminary_judging;
+    }
+
     public function setAllowSubmit(bool $allowSubmit): Contest
     {
         $this->allowSubmit = $allowSubmit;
@@ -1146,6 +1163,9 @@ class Contest extends BaseApiEntity implements
                 $method = sprintf('get%stimeString', ucfirst($time));
                 $timeValueString = $this->{$method}();
             }
+            if ($time === 'freeze' && $this->hasPreliminaryJudging()) {
+                $timeValueString = '+0:00';
+            }
             if ($time === 'start' && !$this->getStarttimeEnabled()) {
                 $resultItem['icon'] = 'ellipsis-h';
                 $timeValue          = $this->getStarttime(false);
@@ -1313,7 +1333,7 @@ class Contest extends BaseApiEntity implements
                 ->addViolation();
         }
         if (!empty($this->getUnfreezetime())) {
-            if (empty($this->getFreezetime())) {
+            if (!$this->hasPreliminaryJudging() && empty($this->getFreezetime())) {
                 $context
                     ->buildViolation('Unfreezetime set but no freeze time. That makes no sense.')
                     ->atPath('unfreezetimeString')

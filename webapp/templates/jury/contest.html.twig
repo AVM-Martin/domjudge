@@ -87,6 +87,11 @@
                     </tr>
                 {% endfor %}
                 <tr>
+                    <th>Preliminary Judging</th>
+                    <td>{{ contest.hasPreliminaryJudging | printYesNo }}</td>
+                    <td></td>
+                </tr>
+                <tr>
                     <th>Allow submit</th>
                     <td>
                         {% include 'jury/partials/contest_toggle.html.twig' with {type: 'submit', enabled: contest.allowSubmit} %}
@@ -473,4 +478,3 @@
 {% block extrafooter %}
     {{ macros.toggle_autosubmit_extrafooter() }}
 {% endblock %}
-
