@@ -29,6 +29,7 @@
                 {% endif %}
                 <th class="testrank">#</th>
                 <th class="testsample">sample</th>
+                <th class="testsample">preliminary</th>
                 <th>download</th>
                 <th>size</th>
                 <th>md5</th>
@@ -64,7 +65,13 @@
                     </td>
                     <td rowspan="2" class="testsample">
                         <input type="checkbox" name="sample[{{ testcase.rank }}]" value="sample"
+                               id="sample[{{ testcase.rank }}]" onclick="toggleElement('pretest[{{ testcase.rank }}]', this.checked)"
                                {% if testcase.sample %}checked{% endif %} />
+                    </td>
+                    <td rowspan="2" class="testsample">
+                        <input type="checkbox" name="pretest[{{ testcase.rank }}]" value="pretest"
+                               id="pretest[{{ testcase.rank }}]" onclick="toggleElement('sample[{{ testcase.rank }}]', this.checked)"
+                               {% if testcase.pretest %}checked{% endif %} />
                     </td>
                     <td class="filename">
                         <a href="{{ path('jury_problem_testcase_fetch', {'probId': problem.probid, 'rank': testcase.rank, 'type': 'input'}) }}">
@@ -159,8 +166,20 @@
             <div class="col-sm-2"></div>
             <div class="col-sm-4">
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="add_sample" name="add_sample">
+                    <input type="checkbox" class="form-check-input" id="add_sample" name="add_sample"
+                           onclick="toggleElement('add_pretest', this.checked)" />
                     <label class="form-check-label" for="add_sample">Sample testcase</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-4">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="add_pretest" name="add_pretest"
+                           onclick="toggleElement('add_sample', this.checked)" />
+                    <label class="form-check-label" for="add_pretest">Preliminary</label>
                 </div>
             </div>
         </div>
@@ -207,6 +226,12 @@
                 $(this).prev().text(fileName);
             });
         });
+
+        function toggleElement(id, enable) {
+            if (enable) {
+                document.getElementById(id).checked=false;
+            }
+        }
     </script>
 
 {% endblock %}

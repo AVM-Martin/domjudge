@@ -583,6 +583,12 @@ class ProblemController extends BaseController
                     $messages[] = sprintf('Set testcase %d to %sbe a sample testcase', $rank, $newSample ? '' : 'not ');
                 }
 
+                $newPretest = isset($request->request->all('pretest')[$rank]);
+                if ($newPretest !== $testcase->isPretest()) {
+                    $testcase->setPretest($newPretest);
+                    $messages[] = sprintf('Set testcase %d to %sbe a preliminary testcase', $rank, $newPretest ? '' : 'not ');
+                }
+
                 $newDescription = $request->request->all('description')[$rank];
                 if ($newDescription !== $testcase->getDescription(true)) {
                     $testcase->setDescription($newDescription);
@@ -697,7 +703,8 @@ class ProblemController extends BaseController
                     ->setRank($maxrank)
                     ->setProblem($problem)
                     ->setDescription($request->request->get('add_desc'))
-                    ->setSample($request->request->has('add_sample'));
+                    ->setSample($request->request->has('add_sample'))
+                    ->setPretest($request->request->has('add_pretest'));
                 foreach (['input', 'output'] as $type) {
                     $file          = $request->files->get('add_' . $type);
                     $content       = file_get_contents($file->getRealPath());
