@@ -176,6 +176,26 @@ class Judging extends BaseApiEntity
     #[Serializer\Exclude]
     private ?InternalError $internalError = null;
 
+    /**
+     * If true, mark verdict as pretests passed
+     */
+    #[ORM\Column(options: [
+        'comment' => 'If true, mark verdict as pretests passed',
+        'default' => 0,
+    ])]
+    #[Serializer\Exclude]
+    private bool $pretests_passed = false;
+
+    /**
+     * If true, mark pretests verdict as ignored
+     */
+    #[ORM\Column(options: [
+        'comment' => 'If true, mark pretests verdict as ignored',
+        'default' => 0,
+    ])]
+    #[Serializer\Exclude]
+    private bool $ignored = false;
+
     public function getMaxRuntime(): ?float
     {
         if ($this->runs->isEmpty()) {
@@ -423,6 +443,28 @@ class Judging extends BaseApiEntity
     public function getRejudging(): ?Rejudging
     {
         return $this->rejudging;
+    }
+
+    public function isPretestsPassed(): bool
+    {
+        return $this->pretests_passed;
+    }
+
+    public function setPretestsPassed(bool $passed): Judging
+    {
+        $this->pretests_passed = $passed;
+        return $this;
+    }
+
+    public function isIgnored(): bool
+    {
+        return $this->ignored;
+    }
+
+    public function setIgnored(bool $ignored): Judging
+    {
+        $this->ignored = $ignored;
+        return $this;
     }
 
     public function setOriginalJudging(?Judging $originalJudging = null): Judging
