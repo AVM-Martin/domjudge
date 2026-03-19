@@ -43,6 +43,10 @@ class FreezeData
                 $this->cache[self::KEY_SHOW_FINAL] =
                     (!$hasFreezeTime && Utils::difftime((float)$this->contest->getEndtime(), $now) <= 0) ||
                     ($hasUnfreezeTime && Utils::difftime((float)$this->contest->getUnfreezetime(), $now) <= 0);
+                if ($this->contest->hasPreliminaryJudging()) {
+                    $this->cache[self::KEY_SHOW_FINAL] =
+                        ($hasUnfreezeTime && Utils::difftime((float)$this->contest->getUnfreezetime(), $now) <= 0);
+                }
             }
         }
 
@@ -66,6 +70,10 @@ class FreezeData
                 $this->cache[self::KEY_SHOW_FROZEN] =
                     ($hasFreezeTime && Utils::difftime((float)$this->contest->getFreezetime(), $now) <= 0) &&
                     (!$hasUnfreezeTime || Utils::difftime($now, (float)$this->contest->getUnfreezetime()) <= 0);
+                if ($this->contest->hasPreliminaryJudging()) {
+                    $this->cache[self::KEY_SHOW_FROZEN] =
+                        (!$hasUnfreezeTime || Utils::difftime($now, (float)$this->contest->getUnfreezetime()) <= 0);
+                }
             }
         }
 

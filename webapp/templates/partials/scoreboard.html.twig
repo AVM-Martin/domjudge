@@ -110,10 +110,15 @@
 
         {% if scoreboard.freezeData.showFrozen %}
             <div class="alert alert-warning" role="alert" style="font-size: 80%;">
-                {% if jury %}
+                {% if jury and current_contest.hasPreliminaryJudging %}
+                    <a href="{{ path('public_index') }}">The public scoreboard</a>
+                    only shows the preliminary results of all submissions.
+                {% elseif jury %}
                     <a href="{{ path('public_index') }}">The public scoreboard</a>
                     was frozen with {{ current_contest.minutesRemaining }} minutes remaining.
                     {% if showPending %}Submissions after the freeze are indicated with a blue corner.{% endif %}
+                {% elseif current_contest.hasPreliminaryJudging %}
+                    The scoreboard only shows the preliminary results of all submissions.
                 {% else %}
                     The scoreboard was frozen with {{ current_contest.minutesRemaining }} minutes remaining - solutions
                     submitted in the last {{ current_contest.minutesRemaining }} minutes of the contest {% if showPending %}are still shown as pending{% else %}are not shown{% endif %}.
