@@ -413,7 +413,7 @@ class TwigExtension extends AbstractExtension implements GlobalsInterface
             $judgingId = $judging ? $judging->getJudgingid() : null;
             $probId    = $submission->getProblem()->getProbid();
             $testcases = $this->em->getConnection()->fetchAllAssociative(
-                'SELECT r.runresult, jh.hostname, jt.valid, t.ranknumber, t.description, t.sample
+                'SELECT r.runresult, jh.hostname, jt.valid, t.ranknumber, t.description, t.sample, t.pretest
                   FROM testcase t
                   LEFT JOIN judging_run r ON (r.testcaseid = t.testcaseid
                                               AND r.judgingid = :judgingid)
@@ -427,10 +427,16 @@ class TwigExtension extends AbstractExtension implements GlobalsInterface
 
         $results = '';
         $lastTypeSample = true;
+        $lastTypePretest = true;
+        $hasPretest = $submission->getContest()->hasPreliminaryJudging() === true;
         foreach ($testcases as $key => $testcase) {
             if ($testcase['sample'] != $lastTypeSample) {
                 $results        .= ' | ';
                 $lastTypeSample = $testcase['sample'];
+            }
+            if ($hasPretest && !$testcase['sample'] && $testcase['pretest'] != $lastTypePretest) {
+                $results         .= ' | ';
+                $lastTypePretest = $testcase['pretest'];
             }
             $class = $submissionDone ? 'secondary' : 'primary';
             $text  = '?';
@@ -467,14 +473,19 @@ class TwigExtension extends AbstractExtension implements GlobalsInterface
     /**
      * @param Testcase[] $testcases
      */
-    public function displayTestcaseResults(array $testcases, bool $submissionDone, bool $isExternal = false): string
+    public function displayTestcaseResults(array $testcases, bool $submissionDone, bool $isExternal = false, bool $hasPretest = false): string
     {
         $results = '';
         $lastTypeSample = true;
+        $lastTypePretest = true;
         foreach ($testcases as $testcase) {
             if ($testcase->getSample() != $lastTypeSample) {
                 $results        .= ' | ';
                 $lastTypeSample = $testcase->getSample();
+            }
+            if ($hasPretest && !$testcase->getSample() && $testcase->isPretest() != $lastTypePretest) {
+                $results         .= ' | ';
+                $lastTypePretest = $testcase->isPretest();
             }
 
             $class     = $submissionDone ? 'secondary' : 'primary';

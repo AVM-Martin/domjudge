@@ -514,6 +514,7 @@
 
         <div class="mb-2">
             {# Display testcase results #}
+            {% set hasPretest = submission.contest.hasPreliminaryJudging %}
             {% if externalJudgement is not null or (selectedJudging is not null and selectedJudging.result != 'compiler-error') %}
                 <table>
                     {% if not submission.importError %}
@@ -524,7 +525,7 @@
                                 {% else %}
                                     {% set judgingDone = selectedJudging.endtime is not empty %}
                                 {% endif %}
-                                {{ runs | displayTestcaseResults(judgingDone) }}
+                                {{ runs | displayTestcaseResults(judgingDone, hasPretest: hasPretest) }}
                             </td>
                             <td>
                                 {% if selectedJudging is not null and runsOutstanding %}
@@ -559,7 +560,7 @@
                     {% if lastJudging is not null %}
                         <tr class="lasttcruns">
                             <td>
-                                {{ lastRuns | displayTestcaseResults(lastJudging.endtime is not empty) }}
+                                {{ lastRuns | displayTestcaseResults(lastJudging.endtime is not empty, hasPretest: hasPretest) }}
                             </td>
                             <td>
                                 <a href="{{ lastSubmissionLink }}">previous s{{ lastSubmission.submitid }}</a>
