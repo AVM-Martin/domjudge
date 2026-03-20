@@ -18,6 +18,7 @@ use App\Entity\QueueTask;
 use App\Entity\Rejudging;
 use App\Entity\Submission;
 use App\Entity\SubmissionFile;
+use App\Entity\Testcase;
 use App\Entity\TestcaseContent;
 use App\Entity\Version;
 use App\Service\BalloonService;
@@ -1009,6 +1010,9 @@ class JudgehostController extends AbstractFOSRestController
         // Result of this judging_run has been stored. now check whether
         // we're done or if more testcases need to be judged.
 
+        // mark pretests if unset
+        $this->markPretestResult($judging, $resultsPrio);
+
         /** @var JudgingRun[] $runs */
         $runs = $this->em->createQueryBuilder()
             ->from(JudgeTask::class, 'jt')
@@ -1138,6 +1142,36 @@ class JudgehostController extends AbstractFOSRestController
         }
 
         return $judging->getResult() === null || $judging->getJudgeCompletely() || $lazyEval === DOMJudgeService::EVAL_FULL;
+    }
+
+    private function markPretestResult(Judging $judging, array $resultsPrio): void
+    {
+        if ($judging->isPretestsPassed() === true) {
+            return;
+        }
+
+        /** @var JudgingRun[] $pretestRuns */
+        $runs = $this->em->createQueryBuilder()
+            ->from(JudgeTask::class, 'jt')
+            ->leftJoin(JudgingRun::class, 'jr', Join::WITH, 'jt.testcase_id = jr.testcase AND jr.judging = :judgingid')
+            ->leftJoin(TestCase::class, 'tc', Join::WITH, 'jt.testcase_id = tc.testcaseid')
+            ->select('jr.runresult')
+            ->andWhere('jt.jobid = :judgingid')
+            ->andWhere('jr.judging = :judgingid')
+            ->andWhere('jt.testcase_id = jr.testcase')
+            ->andWhere('tc.sample = 1 OR tc.pretest = 1')
+            ->orderBy('jt.judgetaskid')
+            ->setParameter('judgingid', $judging->getJudgingid())
+            ->getQuery()
+            ->getArrayResult();
+        $runresults = array_column($runs, 'runresult');
+
+        if (SubmissionService::getFinalResult($runresults, $resultsPrio) !== 'correct') {
+            return;
+        }
+
+        $judging->setPretestsPassed(true);
+        $this->em->flush();
     }
 
     private function maybeUpdateActiveJudging(Judging $judging): void
