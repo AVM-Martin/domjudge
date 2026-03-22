@@ -1275,6 +1275,20 @@ class DOMJudgeService
                 'teampriority' => $teamPriority,
             ]
         );
+
+        // Run preliminary judging with similar parameter
+        if ($submission->getContest()->hasPreliminaryJudging()) {
+            $this->em->getConnection()->executeQuery(
+                'INSERT INTO queuepretask (judgingid, priority, teamid, teampriority, starttime)
+                 VALUES (:judgingid, :priority, :teamid, :teampriority, null)',
+                [
+                    'judgingid' => $judging->getJudgingid(),
+                    'priority' => $priority,
+                    'teamid' => $team->getTeamid(),
+                    'teampriority' => $teamPriority,
+                ]
+            );
+        }
     }
 
     public function getImmutableCompareExecutable(ContestProblem $problem): ImmutableExecutable

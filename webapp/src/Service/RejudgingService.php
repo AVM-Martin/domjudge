@@ -337,6 +337,8 @@ class RejudgingService
                             AND result IS NULL', ['aborted' => 'aborted', 'judgingid' => $submission['judgingid']]);
                 $this->em->getConnection()->executeQuery(
                     'DELETE FROM queuetask WHERE judgingid = :judgingid', ['judgingid' => $submission['judgingid']]);
+                $this->em->getConnection()->executeQuery(
+                    'DELETE FROM queuepretask WHERE judgingid = :judgingid', ['judgingid' => $submission['judgingid']]);
             } else {
                 $error = "Unknown action '$action' specified.";
                 throw new BadMethodCallException($error);
