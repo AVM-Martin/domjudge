@@ -1172,6 +1172,13 @@ class JudgehostController extends AbstractFOSRestController
 
         $judging->setPretestsPassed(true);
         $this->em->flush();
+
+        // trigger scorecache calculation
+        $submission = $judging->getSubmission();
+        $contest    = $submission->getContest();
+        $team       = $submission->getTeam();
+        $problem    = $submission->getProblem();
+        $this->scoreboardService->calculateScoreRow($contest, $team, $problem);
     }
 
     private function maybeUpdateActiveJudging(Judging $judging): void

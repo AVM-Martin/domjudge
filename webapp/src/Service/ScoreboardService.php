@@ -259,6 +259,7 @@ class ScoreboardService
 
         $contestStartTime = $contest->getStarttime();
         $preliminaryJudging = $contest->hasPreliminaryJudging();
+        $lastPretestPassedSubmitId = 0;
         $submissionsCounter = 0;
 
         foreach ($submissions as $submission) {
@@ -366,6 +367,8 @@ class ScoreboardService
                 $submissionsJury += $submissionsCounter;
                 $submissionsPubl += $submissionsCounter;
                 $submissionsCounter = 0;
+
+                $lastPretestPassedSubmitId = $submission->getSubmitid();
             }
         }
 
@@ -419,6 +422,20 @@ class ScoreboardService
                     tc.sortorder = :teamSortOrder AND
                     round(s.submittime,4) < :submitTime', $params);
             }
+        }
+
+        // mark all PRETEST-PASSED submissions as IGNORED
+        if ($lastPretestPassedSubmitId !== 0) {
+            $this->em->getConnection()->executeQuery('UPDATE judging j LEFT JOIN submission s ON j.submitid = s.submitid
+                SET j.ignored = 1 WHERE s.cid = :cid AND s.teamid = :teamid AND s.probid = :probid', [
+                    'cid' => $contest->getCid(),
+                    'teamid' => $team->getTeamId(),
+                    'probid' => $problem->getProbid(),
+                ]);
+
+            $this->em->getConnection()->executeQuery('UPDATE judging j SET j.ignored = 0 WHERE j.submitid = :submitid', [
+                'submitid' => $lastPretestPassedSubmitId,
+            ]);
         }
 
         // Use a direct REPLACE INTO query to drastically speed this up
