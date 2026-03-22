@@ -14,6 +14,7 @@ use App\Entity\JudgeTask;
 use App\Entity\Judging;
 use App\Entity\JudgingRun;
 use App\Entity\JudgingRunOutput;
+use App\Entity\QueuePreTask;
 use App\Entity\QueueTask;
 use App\Entity\Rejudging;
 use App\Entity\Submission;
@@ -1638,7 +1639,7 @@ class JudgehostController extends AbstractFOSRestController
          * work across judgehosts (e.g. additional compilation) low.
          */
 
-        $judgetasks = $this->getHighPriorityWork($judgehost, $max_batchsize);
+        $judgetasks = $this->getHighPriorityWork($judgehost, $max_batchsize, false);
         if ($judgetasks !== null) {
             return $judgetasks;
         }
@@ -1672,9 +1673,10 @@ class JudgehostController extends AbstractFOSRestController
     /**
      * @param JudgeTask[] $judgeTasks
      * @param int $max_batchsize
+     * @param bool $isPreliminaryJudging
      * @return JudgeTask[]|null
      */
-    private function getHighPriorityWork(Judgehost $judgehost, int $max_batchsize): ?array
+    private function getHighPriorityWork(Judgehost $judgehost, int $max_batchsize, bool $isPreliminaryJudging): ?array
     {
         /*
          * We follow the following high-level strategy here to assign work:
@@ -1705,7 +1707,7 @@ class JudgehostController extends AbstractFOSRestController
             ->getQuery()
             ->getOneOrNullResult(AbstractQuery::HYDRATE_SINGLE_SCALAR);
 
-        $judgetasks = $this->getJudgetasks($lastJobId, $max_batchsize, $judgehost);
+        $judgetasks = $this->getJudgetasks($lastJobId, $max_batchsize, $judgehost, $isPreliminaryJudging);
         if ($judgetasks !== null) {
             return $judgetasks;
         }
@@ -1738,7 +1740,7 @@ class JudgehostController extends AbstractFOSRestController
                 // Another judgehost beat us to it.
                 $judgetasks = [['type' => 'try_again']];
             } else {
-                $judgetasks = $this->getJudgetasks($jobid, $max_batchsize, $judgehost);
+                $judgetasks = $this->getJudgetasks($jobid, $max_batchsize, $judgehost, $isPreliminaryJudging);
                 if (empty($judgetasks)) {
                     // Somehow we got ourselves in a situation that there was a queue task without remaining judge tasks.
                     // This should not happen, but if it does, we need to clean up. Each of the fetch-work calls will clean
@@ -1761,7 +1763,7 @@ class JudgehostController extends AbstractFOSRestController
                 ->setMaxResults(1)
                 ->getQuery()
                 ->getOneOrNullResult(AbstractQuery::HYDRATE_SINGLE_SCALAR);
-            $judgetasks = $this->getJudgetasks($jobid, $max_batchsize, $judgehost);
+            $judgetasks = $this->getJudgetasks($jobid, $max_batchsize, $judgehost, $isPreliminaryJudging);
             if ($judgetasks !== null) {
                 return $judgetasks;
             }
@@ -1861,8 +1863,12 @@ class JudgehostController extends AbstractFOSRestController
     /**
      * @return JudgeTask[]|null
      */
-    private function getJudgetasks(string|int|null $jobId, int $max_batchsize, Judgehost $judgehost): ?array
-    {
+    private function getJudgetasks(
+        string|int|null $jobId,
+        int $max_batchsize,
+        Judgehost $judgehost,
+        bool $isPreliminaryJudging,
+    ): ?array {
         if ($jobId === null) {
             return null;
         }
