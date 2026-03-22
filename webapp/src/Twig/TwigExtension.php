@@ -595,8 +595,9 @@ class TwigExtension extends AbstractExtension implements GlobalsInterface
         $judgingResult = $this->printResult($judging->getResult(), $valid, $jury, $onlyRejectedForIncorrect);
 
         $submission = $judging->getSubmission();
-        if ($submission->getSubmittime() > $submission->getContest()->getEndtime()) {
-            return $this->printResult('too-late', $valid) . ($jury ? ' (' . $judgingResult . ')' : '');
+        if ($jury && $submission->getSubmittime() > $submission->getContest()->getEndtime()) {
+            // only jury needs this result, team/partials/submission_list.html.twig already masked this
+            return $this->printResult('too-late', $valid) . ' (' . $judgingResult . ')';
         }
 
         if (!$judging->isPretestsPassed()) {
