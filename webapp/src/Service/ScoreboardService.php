@@ -258,6 +258,8 @@ class ScoreboardService
         $runtimePubl     = PHP_INT_MAX;
 
         $contestStartTime = $contest->getStarttime();
+        $preliminaryJudging = $contest->hasPreliminaryJudging();
+        $submissionsCounter = 0;
 
         foreach ($submissions as $submission) {
             /** @var Judging|ExternalJudgement|null $judging */
@@ -284,7 +286,7 @@ class ScoreboardService
 
             // If there is a public and correct submission, we can stop counting
             // submissions or looking for a correct one (skip steps 2,3)
-            if ($correctPubl) {
+            if (!$preliminaryJudging && $correctPubl) {
                 continue;
             }
 
@@ -296,7 +298,7 @@ class ScoreboardService
                 // correct one yet. This is needed because during the freeze
                 // we consider submissions after the correct one for the
                 // public to not leak any info.
-                if (!$correctJury) {
+                if (!$preliminaryJudging && !$correctJury) {
                     $pendingJury++;
                 }
                 $pendingPubl++;
@@ -308,26 +310,28 @@ class ScoreboardService
             // to count compiler penalties and the judging is a compiler error.
             $countSubmission = $compilePenalty || $judging->getResult() != Judging::RESULT_COMPILER_ERROR;
 
-            if (!$correctJury && $countSubmission) {
+            if (!$preliminaryJudging && !$correctJury && $countSubmission) {
                 // For the jury: only consider it as a submission if we don't
                 // have a correct one yet. This is needed because during the
                 // freeze we consider submissions after the correct one for
                 // the public to not leak any info.
                 $submissionsJury++;
             }
-            if ($submission->isAfterFreeze()) {
+            if (!$preliminaryJudging && $submission->isAfterFreeze()) {
                 // Show submissions after freeze as pending to the public (if
                 // SHOW_PENDING is enabled). Note that we even show these
                 // submissions if they are a compiler-error and
                 // compile_penalty is set to false, to not leak any info.
                 $pendingPubl++;
-            } elseif ($countSubmission) {
+            } elseif ($preliminaryJudging && $countSubmission) {
+                $submissionsCounter++;
+            } elseif (!$preliminaryJudging && $countSubmission) {
                 $submissionsPubl++;
             }
 
             // If we encountered a correct submission during the whole contest,
             // do not consider the submissions after that one for correctness.
-            if ($correctJury) {
+            if (!$preliminaryJudging && $correctJury) {
                 continue;
             }
 
@@ -337,7 +341,7 @@ class ScoreboardService
             $absSubmitTime = max($absSubmitTime, $contestStartTime);
             $submitTime    = $contest->getContestTime($absSubmitTime);
 
-            if ($judging->getResult() == Judging::RESULT_CORRECT) {
+            if (!$preliminaryJudging && $judging->getResult() == Judging::RESULT_CORRECT) {
                 $correctJury = true;
                 $timeJury    = $submitTime;
                 if (!$submission->isAfterFreeze()) {
@@ -345,12 +349,30 @@ class ScoreboardService
                     $timePubl    = $submitTime;
                 }
             }
+
+            // determine calculation for preliminary judging contest system
+            if ($preliminaryJudging && $judging->isPretestsPassed()) {
+                if ($judging->getResult() === Judging::RESULT_CORRECT) {
+                    $correctJury = true;
+                    $timeJury    = $submitTime;
+                } else {
+                    $correctJury = false;
+                    $timeJury    = 0;
+                }
+
+                $correctPubl = true;
+                $timePubl    = $submitTime;
+
+                $submissionsJury += $submissionsCounter;
+                $submissionsPubl += $submissionsCounter;
+                $submissionsCounter = 0;
+            }
         }
 
         // See if this submission was the first to solve this problem.
         // Only relevant if it was correct in the first place.
         $firstToSolve = false;
-        if ($correctJury) {
+        if (!$preliminaryJudging && $correctJury) {
             $params = [
                 'cid' => $contest->getCid(),
                 'probid' => $problem->getProbid(),
