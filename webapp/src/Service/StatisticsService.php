@@ -432,7 +432,7 @@ class StatisticsService
             ->join('s.team', 'team')
             ->join('team.category', 'tc')
             ->andWhere('j.valid = true')
-            ->andWhere('j.result IS NOT NULL')
+            ->andWhere('j.result IS NOT NULL OR j.pretests_passed = true')
             ->andWhere('s.contest = :contest')
             ->andWhere('s.problem IN (:problems)')
             ->andWhere('tc.visible = true')
@@ -456,7 +456,10 @@ class StatisticsService
                 $queryBuilder = clone $judgingsQueryBuilder;
                 $queryBuilder->andWhere('s.submittime >= :starttime');
                 $queryBuilder->andWhere('s.submittime < :endtime');
-                if ($showVerdictsInFreeze || $end->getTimestamp() <= $contest->getFreezetime()) {
+                if ($contest->isFrozenPreliminaryJudging()) {
+                    $queryBuilder->andWhere('j.pretests_passed = :pretests');
+                    $queryBuilder->setParameter('pretests', $correct);
+                } else if ($showVerdictsInFreeze || $end->getTimestamp() <= $contest->getFreezetime()) {
                     // When we don't want to show frozen correct/incorrect submissions,
                     // get the same data for both correct and incorrect.
                     // This logic assumes the freeze matches with the start of a bucket.
@@ -474,6 +477,9 @@ class StatisticsService
                     ->setParameter('endtime', $end->getTimestamp());
 
                 $statsIndex = $correct ? 'correct' : 'incorrect';
+                if ($contest->isFrozenPreliminaryJudging()) {
+                    $statsIndex = $correct ? 'passed' : 'failed';
+                }
 
                 $result = $queryBuilder->getQuery()->getArrayResult();
                 foreach ($result as $resultItem) {
@@ -501,6 +507,9 @@ class StatisticsService
         foreach ($stats['problems'] as $problemStats) {
             foreach ([true, false] as $correct) {
                 $statsIndex = $correct ? 'correct' : 'incorrect';
+                if ($contest->isFrozenPreliminaryJudging()) {
+                    $statsIndex = $correct ? 'passed' : 'failed';
+                }
                 foreach ($problemStats[$statsIndex] as $statItem) {
                     if ($correct) {
                         $maxBucketSizeCorrect = max($maxBucketSizeCorrect, $statItem['count']);

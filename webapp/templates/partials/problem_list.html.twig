@@ -71,6 +71,9 @@
                                                                 {% set index = 'incorrect' %}
                                                                 {% set maxBucketSize = stats.maxBucketSizeIncorrect %}
                                                             {% endif %}
+                                                            {% if contest.isFrozenPreliminaryJudging %}
+                                                                {% set index = correct ? 'passed' : 'failed' %}
+                                                            {% endif %}
                                                             {% set stat = stats.problems[problem.problem.probid][index][bucket] %}
                                                             {% set count = stat.count %}
                                                             {% if maxBucketSize == 0 %}
@@ -90,6 +93,9 @@
                                                                 {% set label = count ~ ' ' ~ submissionText ~ ' in freeze' %}
                                                             {% else %}
                                                                 {% set itemClass = index ~ '-' ~ bucket %}
+                                                                {% if contest.isFrozenPreliminaryJudging %}
+                                                                    {% set itemClass = (correct ? 'correct' : 'incorrect') ~ '-' ~ bucket %}
+                                                                {% endif %}
                                                                 {% set label = count ~ ' ' ~ index ~ ' ' ~ submissionText %}
                                                             {% endif %}
                                                             <div

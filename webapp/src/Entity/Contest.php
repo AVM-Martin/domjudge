@@ -1666,4 +1666,12 @@ class Contest extends BaseApiEntity implements
     {
         return array_filter([$this->problemsetForApi]);
     }
+
+    /**
+     * Return whether the contest has preliminary judging and the results are frozen.
+     */
+    public function isFrozenPreliminaryJudging(): bool
+    {
+        return $this->hasPreliminaryJudging() && $this->getFreezeData()->showFrozen();
+    }
 }
