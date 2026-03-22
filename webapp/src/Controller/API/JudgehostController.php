@@ -1636,7 +1636,47 @@ class JudgehostController extends AbstractFOSRestController
 
         /* Our main objective is to work on high priority work first while keeping the additional overhead of splitting
          * work across judgehosts (e.g. additional compilation) low.
-         *
+         */
+
+        $judgetasks = $this->getHighPriorityWork($judgehost, $max_batchsize);
+        if ($judgetasks !== null) {
+            return $judgetasks;
+        }
+
+        // TODO: Dedup with the code from above.
+        // If there's no judging work to do, let's check if we need to prefetch things.
+        /** @var JudgeTask[] $judgetasks */
+        $judgetasks = $this->em
+            ->createQueryBuilder()
+            ->from(JudgeTask::class, 'jt')
+            ->select('jt')
+            ->andWhere('jt.judgehost = :judgehost')
+            ->andWhere('jt.starttime IS NULL')
+            ->andWhere('jt.valid = 1')
+            ->andWhere('jt.type = :type')
+            ->setParameter('judgehost', $judgehost)
+            ->setParameter('type', JudgeTaskType::PREFETCH)
+            ->addOrderBy('jt.priority')
+            ->addOrderBy('jt.judgetaskid')
+            // TODO: is 50 a good value here?
+            ->setMaxResults(50)
+            ->getQuery()
+            ->getResult();
+        if (!empty($judgetasks)) {
+            return $this->serializeJudgeTasks($judgetasks, $judgehost);
+        }
+
+        return [];
+    }
+
+    /**
+     * @param JudgeTask[] $judgeTasks
+     * @param int $max_batchsize
+     * @return JudgeTask[]|null
+     */
+    private function getHighPriorityWork(Judgehost $judgehost, int $max_batchsize): ?array
+    {
+        /*
          * We follow the following high-level strategy here to assign work:
          * 1) If there's an unfinished job (e.g. a judging) to which we already contributed, and then continue handing
          *    out JudgeTasks for this job.
@@ -1727,30 +1767,7 @@ class JudgehostController extends AbstractFOSRestController
             }
         }
 
-        // TODO: Dedup with the code from above.
-        // If there's no judging work to do, let's check if we need to prefetch things.
-        /** @var JudgeTask[] $judgetasks */
-        $judgetasks = $this->em
-            ->createQueryBuilder()
-            ->from(JudgeTask::class, 'jt')
-            ->select('jt')
-            ->andWhere('jt.judgehost = :judgehost')
-            ->andWhere('jt.starttime IS NULL')
-            ->andWhere('jt.valid = 1')
-            ->andWhere('jt.type = :type')
-            ->setParameter('judgehost', $judgehost)
-            ->setParameter('type', JudgeTaskType::PREFETCH)
-            ->addOrderBy('jt.priority')
-            ->addOrderBy('jt.judgetaskid')
-            // TODO: is 50 a good value here?
-            ->setMaxResults(50)
-            ->getQuery()
-            ->getResult();
-        if (!empty($judgetasks)) {
-            return $this->serializeJudgeTasks($judgetasks, $judgehost);
-        }
-
-        return [];
+        return null;
     }
 
     /**
@@ -1849,15 +1866,16 @@ class JudgehostController extends AbstractFOSRestController
         if ($jobId === null) {
             return null;
         }
-        $queryBuilder = $this->em->createQueryBuilder();
-        /** @var JudgeTask[] $judgetasks */
-        $judgetasks = $queryBuilder
+        $queryBuilder = $this->em->createQueryBuilder()
             ->from(JudgeTask::class, 'jt')
             ->select('jt')
             ->andWhere('jt.judgehost IS NULL')
             ->andWhere('jt.valid = 1')
             ->andWhere('jt.jobid = :jobid')
-            ->andWhere('jt.type = :type')
+            ->andWhere('jt.type = :type');
+
+        /** @var JudgeTask[] $judgetasks */
+        $judgetasks = $queryBuilder
             ->addOrderBy('jt.priority')
             ->addOrderBy('jt.judgetaskid')
             ->setParameter('type', JudgeTaskType::JUDGING_RUN)
