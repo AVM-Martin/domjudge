@@ -9,7 +9,7 @@
 {% else %}
 
     <div id="teamscoresummary">
-        {% set displayRank = not contest.freezeData.showFrozen %}
+        {% set displayRank = contest.hasPreliminaryJudging or not contest.freezeData.showFrozen %}
         {% include 'partials/scoreboard_table.html.twig' with {displayRank: displayRank, jury: false, public: false} %}
     </div>
 

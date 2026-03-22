@@ -273,11 +273,14 @@
 
             {% if showTeamSubmissions or jury %}
                 {% for problem in problems %}
-                    {# CSS class for correct/incorrect/neutral results #}
+                    {# CSS class for correct/passed/incorrect/neutral results #}
                     {% set scoreCssClass = 'score_neutral' %}
                     {% set matrixItem = scoreboard.matrix[score.team.teamid][problem.probid] %}
                     {% if matrixItem.isCorrect %}
                         {% set scoreCssClass = 'score_correct' %}
+                        {% if contest.hasPreliminaryJudging and not contest.freezeData.showFinal(jury) %}
+                            {% set scoreCssClass = 'score_passed' %}
+                        {% endif %}
                         {% if enable_ranking %}
                             {% if not scoreboard.getRuntimeAsScoreTiebreaker() and scoreboard.solvedFirst(score.team, problem) %}
                                 {% set scoreCssClass = scoreCssClass ~ ' score_first' %}
