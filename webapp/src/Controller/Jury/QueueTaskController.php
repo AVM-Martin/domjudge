@@ -149,7 +149,9 @@ class QueueTaskController extends BaseController
             ->from(JudgeTask::class, 'jt')
             ->addOrderBy('jt.judgetaskid')
             ->andWhere('jt.jobid = :jobid')
+            ->andWhere('jt.type = :type')
             ->setParameter('jobid', $queueTask->getJudging()->getJudgingid())
+            ->setParameter('type', JudgeTaskType::JUDGING_RUN)
             ->getQuery()->getResult();
 
         foreach ($judgeTasks as $judgeTask) {
