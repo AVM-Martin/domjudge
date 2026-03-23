@@ -593,6 +593,9 @@ class TwigExtension extends AbstractExtension implements GlobalsInterface
         }
 
         $judgingResult = $this->printResult($judging->getResult(), $valid, $jury, $onlyRejectedForIncorrect);
+        if (!$judging->isStarted()) {
+            $judgingResult = $this->printResult('queued', $valid, $jury);
+        }
 
         $submission = $judging->getSubmission();
         if ($jury && $submission->getSubmittime() > $submission->getContest()->getEndtime()) {
