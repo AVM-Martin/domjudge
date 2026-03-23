@@ -1637,11 +1637,15 @@ class JudgehostController extends AbstractFOSRestController
 
         /* Our main objective is to work on high priority work first while keeping the additional overhead of splitting
          * work across judgehosts (e.g. additional compilation) low.
+         *
+         * We will repeat this sequences 2 times in order to run preliminary judging prior to full judging.
          */
 
-        $judgetasks = $this->getHighPriorityWork($judgehost, $max_batchsize, false);
-        if ($judgetasks !== null) {
-            return $judgetasks;
+        foreach ([true, false] as $isPreliminaryJudging) {
+            $judgetasks = $this->getHighPriorityWork($judgehost, $max_batchsize, $isPreliminaryJudging);
+            if ($judgetasks !== null) {
+                return $judgetasks;
+            }
         }
 
         // TODO: Dedup with the code from above.
@@ -1690,13 +1694,15 @@ class JudgehostController extends AbstractFOSRestController
          * more costly than starting a possible only second most important work item.
          */
 
+        $queueTaskClass = $isPreliminaryJudging ? QueuePreTask::class : QueueTask::class;
+
         // This is case 1) from above: continue what we have started.
         $lastJobId = $this->em->createQueryBuilder()
             ->from(JudgeTask::class, 'jt')
             // Note: we are joining on queue tasks here since if there is no more queue task, there is also no more
             // work to be done. If we would not do this join, the getJudgetasks would try to delete the queue task,
             // which is both slow and results in spamming the auditlog
-            ->innerJoin(QueueTask::class, 'qt', Join::WITH, 'qt.judging = jt.jobid')
+            ->innerJoin($queueTaskClass, 'qt', Join::WITH, 'qt.judging = jt.jobid')
             ->select('jt.jobid')
             ->andWhere('jt.judgehost = :judgehost')
             ->andWhere('jt.type = :type')
@@ -1716,7 +1722,7 @@ class JudgehostController extends AbstractFOSRestController
         // This runs transactional to prevent a queue task being picked up twice.
         $judgetasks = null;
         $jobid = $this->em->createQueryBuilder()
-            ->from(QueueTask::class, 'qt')
+            ->from($queueTaskClass, 'qt')
             ->innerJoin('qt.judging', 'j')
             ->select('j.judgingid')
             ->andWhere('qt.startTime IS NULL')
@@ -1728,7 +1734,7 @@ class JudgehostController extends AbstractFOSRestController
         if ($jobid !== null) {
             // Mark it as being worked on.
             $result = $this->em->createQueryBuilder()
-                ->update(QueueTask::class, 'qt')
+                ->update($queueTaskClass, 'qt')
                 ->set('qt.startTime', Utils::now())
                 ->andWhere('qt.judging = :jobid')
                 ->andWhere('qt.startTime IS NULL')
@@ -1755,7 +1761,7 @@ class JudgehostController extends AbstractFOSRestController
             // This is case 2.b) from above: contribute to a job someone else has started,
             // but we have not contributed yet.
             $jobid = $this->em->createQueryBuilder()
-                ->from(QueueTask::class, 'qt')
+                ->from($queueTaskClass, 'qt')
                 ->innerJoin('qt.judging', 'j')
                 ->select('j.judgingid')
                 ->addOrderBy('qt.priority')
@@ -1880,6 +1886,11 @@ class JudgehostController extends AbstractFOSRestController
             ->andWhere('jt.jobid = :jobid')
             ->andWhere('jt.type = :type');
 
+        if ($isPreliminaryJudging) {
+            $queryBuilder->leftJoin(TestCase::class, 'tc', Join::WITH, 'jt.testcase_id = tc.testcaseid')
+                ->andWhere('tc.sample = 1 OR tc.pretest = 1');
+        }
+
         /** @var JudgeTask[] $judgetasks */
         $judgetasks = $queryBuilder
             ->addOrderBy('jt.priority')
@@ -1890,18 +1901,21 @@ class JudgehostController extends AbstractFOSRestController
             ->getQuery()
             ->getResult();
         if (empty($judgetasks)) {
+            $queueTaskClass = $isPreliminaryJudging ? QueuePreTask::class : QueueTask::class;
+            $auditDataType = $isPreliminaryJudging ? 'queuepretask' : 'queuetask';
+
             // TODO: There is currently a race condition when a jury member requests the remaining test cases to be
             // judged in the time between allocating the final batch and the next judgehost checking in and deleting
             // the queuetask here.
             $this->em->createQueryBuilder()
-                ->from(QueueTask::class, 'qt')
+                ->from($queueTaskClass, 'qt')
                 ->andWhere('qt.judging = :jobid')
                 ->setParameter('jobid', $jobId)
                 ->delete()
                 ->getQuery()
                 ->execute();
             $this->em->flush();
-            $this->dj->auditlog('queuetask', $jobId, 'deleted');
+            $this->dj->auditlog($auditDataType, $jobId, 'deleted');
         } else {
             return $this->serializeJudgeTasks($judgetasks, $judgehost);
         }
