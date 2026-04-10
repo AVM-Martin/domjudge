@@ -555,8 +555,17 @@ class ScoreboardService
                     );
                     $timeOfLastCorrect[$variant] = max($timeOfLastCorrect[$variant], $solveTimeForProblem);
                     $totalTime[$variant] += $solveTimeForProblem + $penalty;
+                    if ($contest->hasPreliminaryJudging()) {
+                        $totalTime[$variant] -= $solveTimeForProblem;
+                    }
                     $totalRuntime[$variant] += $scoreCacheCell->getRuntime($isRestricted);
                 }
+            }
+        }
+
+        if ($contest->hasPreliminaryJudging()) {
+            foreach ($variants as $variant => $isRestricted) {
+                $totalTime[$variant] += $timeOfLastCorrect[$variant];
             }
         }
 
