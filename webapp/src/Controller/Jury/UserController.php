@@ -193,6 +193,7 @@ class UserController extends BaseController
         );
 
         return $this->render('jury/user.html.twig', [
+            'contest' => $this->dj->getCurrentContest(),
             'user' => $user,
             'submissions' => $submissions,
             'submissionCounts' => $submissionCounts,

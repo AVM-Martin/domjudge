@@ -242,6 +242,7 @@ class TeamController extends BaseController
         }
 
         $data = [
+            'contest' => $this->dj->getCurrentContest(),
             'refresh' => [
                 'after' => 15,
                 'url' => $request->getRequestUri(),

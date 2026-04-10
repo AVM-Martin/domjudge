@@ -200,6 +200,7 @@ class LanguageController extends BaseController
         );
 
         $data = [
+            'contest' => $this->dj->getCurrentContest(),
             'language' => $language,
             'submissions' => $submissions,
             'submissionCounts' => $submissionCounts,

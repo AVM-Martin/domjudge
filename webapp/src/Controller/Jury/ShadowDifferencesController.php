@@ -210,6 +210,7 @@ class ShadowDifferencesController extends BaseController
         );
 
         $data = [
+            'contest' => $this->dj->getCurrentContest(),
             'verdicts' => $verdicts,
             'used' => $used,
             'verdictTable' => $verdictTable,
