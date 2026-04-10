@@ -263,7 +263,7 @@ class TeamController extends BaseController
 
         if ($currentContest) {
             $scoreboard = $scoreboardService
-                ->getTeamScoreboard($currentContest, $teamId, true);
+                ->getTeamScoreboard($currentContest, $teamId, true, true);
             $data = array_merge(
                 $data,
                 $scoreboardService->getScoreboardTwigData(

@@ -42,11 +42,11 @@ class Scoreboard
         protected readonly array      $scoreCache,
         protected readonly array      $rankCache,
         protected readonly FreezeData $freezeData,
-        bool                          $jury,
+        bool                          $restricted,
         protected readonly int        $penaltyTime,
         protected readonly bool       $scoreIsInSeconds
     ) {
-        $this->restricted = $jury || $freezeData->showFinal($jury);
+        $this->restricted = $restricted;
 
         $this->initializeScoreboard();
         $this->calculateScoreboard();

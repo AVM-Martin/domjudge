@@ -32,12 +32,13 @@ class SingleTeamScoreboard extends Scoreboard
         array $scoreCache,
         FreezeData $freezeData,
         bool $showFtsInFreeze,
+        bool $restricted,
         int $penaltyTime,
         bool $scoreIsInSeconds
     ) {
         $this->showRestrictedFts = $showFtsInFreeze || $freezeData->showFinal();
         parent::__construct($contest, [$team->getTeamid() => $team], [], $problems, $scoreCache, $rankCache, $freezeData,
-            !$contest->hasPreliminaryJudging(), $penaltyTime, $scoreIsInSeconds);
+            $restricted, $penaltyTime, $scoreIsInSeconds);
     }
 
     protected function calculateScoreboard(): void

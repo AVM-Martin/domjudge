@@ -92,8 +92,12 @@ class ScoreboardService
      * @param bool    $showFtsInFreeze If false, the scoreboard will hide first
      *                                 to solve for submissions after contest freeze.
      */
-    public function getTeamScoreboard(Contest $contest, int $teamId, bool $showFtsInFreeze = true): ?Scoreboard
-    {
+    public function getTeamScoreboard(
+        Contest $contest,
+        int $teamId,
+        bool $showFtsInFreeze = true,
+        bool $restricted = false,
+    ): ?Scoreboard {
         $freezeData = new FreezeData($contest);
 
         $teams = $this->getTeamsInOrder($contest, true, new Filter([], [], [], [$teamId]), true);
@@ -109,6 +113,7 @@ class ScoreboardService
         return new SingleTeamScoreboard(
             $contest, $team, $teamRank, $problems,
             $rankCache, $scoreCache, $freezeData, $showFtsInFreeze,
+            $restricted,
             (int)$this->config->get('penalty_time'),
             (bool)$this->config->get('score_in_seconds')
         );
