@@ -58,12 +58,14 @@
                             {%- if submission.submittime >= submission.contest.endtime %}
                                 /
                             {% endif %}
-                            {%- if submission.judgings.first is empty or submission.judgings.first.result is empty %}
-                                {{- '' | printResult -}}
-                            {%- elseif verificationRequired and not submission.judgings.first.verified %}
+                            {%- if submission.judgings.first is empty %}
                                 {{- '' | printResult -}}
                             {%- elseif contest.hasPreliminaryJudging %}
                                 {{- submission.judgings.first | printPretestResult(thawed: contest.getFreezeData.showFinal) -}}
+                            {%- elseif submission.judgings.first.result is empty %}
+                                {{- '' | printResult -}}
+                            {%- elseif verificationRequired and not submission.judgings.first.verified %}
+                                {{- '' | printResult -}}
                             {%- else %}
                                 {{- submission.judgings.first.result | printResult -}}
                             {%- endif %}
