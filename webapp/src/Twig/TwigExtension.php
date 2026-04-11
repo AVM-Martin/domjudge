@@ -571,6 +571,9 @@ class TwigExtension extends AbstractExtension implements GlobalsInterface
             case 'ignored':
                 $style = 'sol_queued';
                 break;
+            case 'compiler-error':
+                $style = 'sol_incorrect';
+                break;
             default:
                 $style = 'sol_incorrect';
                 if ($onlyRejectedForIncorrect) {
