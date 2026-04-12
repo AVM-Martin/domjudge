@@ -304,12 +304,14 @@ class ScoreboardService
                 // correct one yet. This is needed because during the freeze
                 // we consider submissions after the correct one for the
                 // public to not leak any info.
-                if (!$preliminaryJudging && !$correctJury) {
+                if (!$correctJury) {
                     $pendingJury++;
                 }
                 $pendingPubl++;
                 // Don't do any more counting for this submission.
-                continue;
+                if (!$preliminaryJudging) {
+                    continue;
+                }
             }
 
             // We need to count the submission always, except when we don't want
@@ -358,13 +360,8 @@ class ScoreboardService
 
             // determine calculation for preliminary judging contest system
             if ($preliminaryJudging && $judging->isPretestsPassed()) {
-                if ($judging->getResult() === Judging::RESULT_CORRECT) {
-                    $correctJury = true;
-                    $timeJury    = $submitTime;
-                } else {
-                    $correctJury = false;
-                    $timeJury    = 0;
-                }
+                $correctJury = ($judging->getResult() === Judging::RESULT_CORRECT);
+                $timeJury    = $submitTime;
 
                 $correctPubl = true;
                 $timePubl    = $submitTime;
@@ -373,7 +370,20 @@ class ScoreboardService
                 $submissionsPubl += $submissionsCounter;
                 $submissionsCounter = 0;
 
+                $pendingPubl = $pendingJury = 0;
+
                 $lastPretestPassedSubmitId = $submission->getSubmitid();
+            }
+        }
+
+        if ($preliminaryJudging) {
+            if ($correctPubl) {
+                // consider $submissionCounter as pending submissions
+                $pendingPubl = $pendingJury = $submissionsCounter;
+            } else {
+                // put as current submission counter
+                $submissionsPubl = $submissionsCounter - $pendingPubl;
+                $submissionsJury = $submissionsCounter - $pendingJury;
             }
         }
 
