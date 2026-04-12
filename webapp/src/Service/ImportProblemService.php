@@ -340,12 +340,13 @@ class ImportProblemService
         $actualRank = 1;
 
         // First insert sample, then secret data in alphabetical order.
-        foreach (['sample', 'pretest', 'secret'] as $type) {
+        foreach (['sample', 'secret/pretest', 'secret'] as $type) {
             $numCases  = 0;
             $dataFiles = [];
             for ($j = 0; $j < $zip->numFiles; $j++) {
                 $filename = $zip->getNameIndex($j);
                 if (Utils::startsWith($filename, sprintf('data/%s/', $type)) &&
+                    !(($type === 'secret') && Utils::startsWith($filename, 'data/secret/pretest/')) &&
                     Utils::endsWith($filename, '.in')) {
                     $fileout  = preg_replace("/\.in$/", ".ans", $filename);
                     if ($zip->locateName($fileout) !== false) {
@@ -414,7 +415,7 @@ class ImportProblemService
                 if (isset($existingTestcases[$index])) {
                     $testcase = $existingTestcases[$index];
                     $sample   = $type === 'sample';
-                    $pretest = $type === 'pretest';
+                    $pretest  = $type === 'secret/pretest';
                     $changed = false;
                     if ($testcase->getSample() !== $sample) {
                         $testcase->setSample($sample);
@@ -445,7 +446,7 @@ class ImportProblemService
                     ->setProblem($problem)
                     ->setRank($rank)
                     ->setSample($type === 'sample')
-                    ->setPretest($type === 'pretest')
+                    ->setPretest($type === 'secret/pretest')
                     ->setMd5sumInput($md5in)
                     ->setMd5sumOutput($md5out)
                     ->setOrigInputFilename($dataFile);
