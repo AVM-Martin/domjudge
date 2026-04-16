@@ -63,6 +63,7 @@ class MiscController extends BaseController
 
         $data = [
             'team' => $team,
+            'realTeamId' => $teamId,
             'contest' => $contest,
             'refresh' => [
                 'after' => 30,

@@ -245,6 +245,9 @@
                         </span>
                         {% endif %}
                         {{ score.team.effectiveName }}
+                        {% if jury or (realTeamId is defined and realTeamId == score.team.teamid) %}
+                            ({{ score.team.name }})
+                        {% endif %}
                     </span>
                     {% if showAffiliations %}
                         <span class="univ forceWidth">
