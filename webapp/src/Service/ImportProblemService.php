@@ -1036,14 +1036,14 @@ class ImportProblemService
         $yamlProblemProperties = [];
         if (isset($yamlData['name'])) {
             if (is_array($yamlData['name'])) {
-                // Prefer english name, but if not available, use first name.
-                $englishOrFirstName = null;
+                // Prefer indo name, but if not available, use first name.
+                $indoOrFirstName = null;
                 foreach ($yamlData['name'] as $lang => $name) {
-                    if ($englishOrFirstName === null || $lang === 'en') {
-                        $englishOrFirstName = $name;
+                    if ($indoOrFirstName === null || $lang === 'id') {
+                        $indoOrFirstName = $name;
                     }
                 }
-                $yamlProblemProperties['name'] = $englishOrFirstName;
+                $yamlProblemProperties['name'] = $indoOrFirstName;
             } else {
                 $yamlProblemProperties['name'] = $yamlData['name'];
             }
