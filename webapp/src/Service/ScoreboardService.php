@@ -99,7 +99,7 @@ class ScoreboardService
     ): ?Scoreboard {
         $freezeData = new FreezeData($contest);
 
-        $teams = $this->getTeamsInOrder($contest, true, new Filter([], [], [], [$teamId]), true);
+        $teams = $this->getTeamsInOrder($contest, true, new Filter([], [], [], [$teamId]), $restricted);
         if (empty($teams)) {
             return null;
         }
@@ -107,7 +107,7 @@ class ScoreboardService
         $problems   = $this->getProblems($contest);
         $rankCache  = $this->getRankcache($contest, $team);
         $scoreCache = $this->getScorecache($contest, $team);
-        $teamRank   = $this->calculateTeamRank($contest, $team, $freezeData, true);
+        $teamRank   = $this->calculateTeamRank($contest, $team, $freezeData, $restricted);
 
         return new SingleTeamScoreboard(
             $contest, $team, $teamRank, $problems,
