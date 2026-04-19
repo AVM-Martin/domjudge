@@ -73,8 +73,10 @@ class MiscController extends BaseController
             'maxWidth' => $this->config->get('team_column_width'),
         ];
         if ($contest) {
+            $restricted = (!$contest->hasPreliminaryJudging() || $contest->getFreezeData()->showFinal());
+
             $scoreboard = $this->scoreboardService
-                ->getTeamScoreboard($contest, $teamId, false, $contest->hasPreliminaryJudging() !== true);
+                ->getTeamScoreboard($contest, $teamId, false, $restricted);
             $data = array_merge(
                 $data,
                 $this->scoreboardService->getScoreboardTwigData(
