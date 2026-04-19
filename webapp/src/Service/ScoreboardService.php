@@ -77,7 +77,7 @@ class ScoreboardService
 
         return new Scoreboard(
             $contest, $teams, $categories, $problems,
-            $scoreCache, $rankCache, $freezeData, $jury || $forceUnfrozen,
+            $scoreCache, $rankCache, $freezeData, $restricted || $forceUnfrozen,
             (bool)$this->config->get('score_in_seconds'),
         );
     }
