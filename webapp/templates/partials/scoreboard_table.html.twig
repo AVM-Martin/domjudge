@@ -627,6 +627,9 @@
         {% else %}
             {% set cellColors = {first: 'Solved first', correct: 'Solved', incorrect: 'Tried, incorrect', pending: 'Tried, pending', neutral: 'Untried'} %}
         {% endif %}
+        {% if contest.hasPreliminaryJudging %}
+            {% set cellColors = {correct: 'Solved', passed: 'Pretests Passed', incorrect: 'Tried, incorrect', pending: 'Tried, pending', neutral: 'Untried'} %}
+        {% endif %}
         <table id="cell_legend" class="d-none d-md-table scoreboard scorelegend {% if jury %}scoreboard_jury{% endif %}">
             <thead>
             <tr>
