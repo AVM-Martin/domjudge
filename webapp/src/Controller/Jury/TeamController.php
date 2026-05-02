@@ -242,7 +242,6 @@ class TeamController extends BaseController
         }
 
         $data = [
-            'contest' => $this->dj->getCurrentContest(),
             'refresh' => [
                 'after' => 15,
                 'url' => $request->getRequestUri(),
@@ -259,6 +258,7 @@ class TeamController extends BaseController
         $currentContest = $this->dj->getCurrentContest();
         if ($cid !== null && isset($this->dj->getCurrentContests()[$cid])) {
             $currentContest = $this->dj->getCurrentContests()[$cid];
+            $data['contest'] = $currentContest;
         }
 
         if ($currentContest) {

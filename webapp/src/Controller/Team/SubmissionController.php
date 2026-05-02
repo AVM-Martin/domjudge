@@ -194,7 +194,7 @@ class SubmissionController extends BaseController
             || ($showCompile == self::ONLY_SHOW_COMPILE_OUTPUT_ON_ERROR && $judging->getResult() === 'compiler-error');
 
         $data = [
-            'contest' => $this->dj->getCurrentContest(),
+            'contest' => $contest,
             'judging' => $judging,
             'verificationRequired' => $verificationRequired,
             'showCompile' => $actuallyShowCompile,
