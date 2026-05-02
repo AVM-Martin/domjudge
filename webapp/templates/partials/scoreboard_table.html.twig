@@ -281,7 +281,7 @@
                     {% set matrixItem = scoreboard.matrix[score.team.teamid][problem.probid] %}
                     {% if matrixItem.isCorrect %}
                         {% set scoreCssClass = 'score_correct' %}
-                        {% if contest.hasPreliminaryJudging and not contest.freezeData.showFinal(jury) %}
+                        {% if contest.hasPreliminaryJudging and not jury and not contest.freezeData.showFinal %}
                             {% set scoreCssClass = 'score_passed' %}
                         {% endif %}
                         {% if enable_ranking %}
