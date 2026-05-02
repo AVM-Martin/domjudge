@@ -22,7 +22,7 @@
         <tbody>
         {%- for submission in submissions %}
             {% set link = null %}
-            {% if (submission.submittime < current_team_contest.endtime or showTooLateResult) and submission.result and submission.judgings.first is not empty and submission.judgings.first.result is not empty and (not verificationRequired or submission.judgings.first.verified) %}
+            {% if (submission.submittime < current_team_contest.endtime or showTooLateResult) and submission.judgings.first is not empty and (submission.judgings.first.result is not empty or (contest.hasPreliminaryJudging and submission.judgings.first.pretestsPassed)) and (not verificationRequired or submission.judgings.first.verified) %}
                 {% set link = path('team_submission', {submitId: submission.submitid}) %}
             {% endif %}
 
